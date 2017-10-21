@@ -1,0 +1,51 @@
+version: '3'
+services:
+    nginx:
+        network_mode: bridge
+        container_name: nginx
+        image: nginx:latest
+        volumes:
+            - ../web/:/var/www/html/app
+            - ./nginx/vhost.conf:/etc/nginx/conf.d/default.conf
+            - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+        links:
+            - php
+        ports:
+          - "80:80"
+    php:
+        network_mode: bridge
+        container_name: php
+        build: "./php-fpm"
+        volumes:
+            - ../web/:/var/www/html/app
+            - ./php-fpm/php.ini:/usr/local/etc/php/conf.d/php.ini
+        links:
+            - db
+    phpmyadmin:
+        network_mode: bridge
+        container_name: phpmyadmin
+        image: phpmyadmin/phpmyadmin:latest
+        environment:
+          - MYSQL_ROOT_PASSWORD=root
+        links:
+          - db
+        ports:
+          - "8080:80"
+    db:
+        network_mode: bridge
+        container_name: db
+        image: mariadb:latest
+        volumes:
+            - ./mysql/my.cnf:/etc/my.cnf
+            - ./mysql/my.cnf:/etc/mysql/my.cnf
+            - silex-dbdata:/var/lib/mysql
+        environment:
+            - MYSQL_ROOT_PASSWORD=root
+            - MYSQL_DATABASE=silex
+volumes:
+    silex-dbdata:
+        driver: local
+networks:
+    default:
+        external:
+            name: bridge
